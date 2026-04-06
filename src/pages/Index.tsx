@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 
 const NeonCursor = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particles = useRef<{ x: number; y: number; vx: number; vy: number; life: number; size: number }[]>([]);
-  const mouse = useRef({ x: -500, y: -500 });
+  const spotlightPos = useRef({ x: 0, y: 0 });
+  const targetPos = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+  const animId = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -19,48 +20,50 @@ const NeonCursor = () => {
     window.addEventListener("resize", resize);
 
     const onMove = (e: MouseEvent) => {
-      mouse.current = { x: e.clientX, y: e.clientY };
-      for (let i = 0; i < 6; i++) {
-        particles.current.push({
-          x: e.clientX + (Math.random() - 0.5) * 10,
-          y: e.clientY + (Math.random() - 0.5) * 10,
-          vx: (Math.random() - 0.5) * 1.5,
-          vy: -Math.random() * 2 - 0.5,
-          life: 1,
-          size: Math.random() * 18 + 8,
-        });
-      }
+      targetPos.current = { x: e.clientX, y: e.clientY };
     };
-    window.addEventListener("mousemove", onMove);
+    document.addEventListener("mousemove", onMove);
 
-    let animId: number;
-    const draw = () => {
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+    const render = () => {
+      if (!canvas || !ctx) return;
+
+      spotlightPos.current.x = lerp(spotlightPos.current.x, targetPos.current.x, 0.08);
+      spotlightPos.current.y = lerp(spotlightPos.current.y, targetPos.current.y, 0.08);
+
+      const { x, y } = spotlightPos.current;
+      const pulse = 1 + 0.06 * Math.sin((Date.now() / 1800) * Math.PI * 2);
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.current = particles.current.filter((p) => p.life > 0);
-      for (const p of particles.current) {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vx += (Math.random() - 0.5) * 0.3;
-        p.vy -= 0.02;
-        p.life -= 0.025;
-        p.size *= 1.015;
-        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-        grad.addColorStop(0, `rgba(139, 92, 246, ${p.life * 0.7})`);
-        grad.addColorStop(0.4, `rgba(109, 40, 217, ${p.life * 0.35})`);
-        grad.addColorStop(1, `rgba(139, 92, 246, 0)`);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-      }
-      animId = requestAnimationFrame(draw);
+
+      // brilho central branco/roxo
+      const core = ctx.createRadialGradient(x, y, 0, x, y, 80 * pulse);
+      core.addColorStop(0, "rgba(200, 180, 255, 0.25)");
+      core.addColorStop(1, "rgba(139, 92, 246, 0)");
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.arc(x, y, 80 * pulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      // anel neon roxo
+      const glow = ctx.createRadialGradient(x, y, 80 * pulse, x, y, 280 * pulse);
+      glow.addColorStop(0, "rgba(139, 92, 246, 0.22)");
+      glow.addColorStop(0.5, "rgba(109, 40, 217, 0.1)");
+      glow.addColorStop(1, "rgba(139, 92, 246, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, 280 * pulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      animId.current = requestAnimationFrame(render);
     };
-    draw();
+    render();
 
     return () => {
       window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMove);
-      cancelAnimationFrame(animId);
+      document.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(animId.current);
     };
   }, []);
 
