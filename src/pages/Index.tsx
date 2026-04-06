@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 const NeonCursor = () => {
   const [pos, setPos] = useState({ x: -500, y: -500 });
