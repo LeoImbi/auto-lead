@@ -1,4 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+
+const NeonCursor = () => {
+  const [pos, setPos] = useState({ x: -500, y: -500 });
+
+  useEffect(() => {
+    const move = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY });
+    window.addEventListener("mousemove", move);
+    return () => window.removeEventListener("mousemove", move);
+  }, []);
+
+  return (
+    <div
+      className="pointer-events-none fixed inset-0 z-[9999]"
+      style={{
+        background: `radial-gradient(400px circle at ${pos.x}px ${pos.y}px, rgba(139, 92, 246, 0.12), transparent 60%)`,
+      }}
+    />
+  );
+};
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -211,6 +230,7 @@ const Footer = () => (
 
 const Index = () => (
   <div className="min-h-screen">
+    <NeonCursor />
     <Navbar />
     <Hero />
     <ComoFunciona />
