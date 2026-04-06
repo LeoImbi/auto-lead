@@ -1,20 +1,73 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const NeonCursor = () => {
-  const [pos, setPos] = useState({ x: -500, y: -500 });
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const particles = useRef<{ x: number; y: number; vx: number; vy: number; life: number; size: number }[]>([]);
+  const mouse = useRef({ x: -500, y: -500 });
 
   useEffect(() => {
-    const move = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", move);
-    return () => window.removeEventListener("mousemove", move);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const onMove = (e: MouseEvent) => {
+      mouse.current = { x: e.clientX, y: e.clientY };
+      for (let i = 0; i < 6; i++) {
+        particles.current.push({
+          x: e.clientX + (Math.random() - 0.5) * 10,
+          y: e.clientY + (Math.random() - 0.5) * 10,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: -Math.random() * 2 - 0.5,
+          life: 1,
+          size: Math.random() * 18 + 8,
+        });
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+
+    let animId: number;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.current = particles.current.filter((p) => p.life > 0);
+      for (const p of particles.current) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx += (Math.random() - 0.5) * 0.3;
+        p.vy -= 0.02;
+        p.life -= 0.025;
+        p.size *= 1.015;
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+        grad.addColorStop(0, `rgba(139, 92, 246, ${p.life * 0.7})`);
+        grad.addColorStop(0.4, `rgba(109, 40, 217, ${p.life * 0.35})`);
+        grad.addColorStop(1, `rgba(139, 92, 246, 0)`);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(animId);
+    };
   }, []);
 
   return (
-    <div
+    <canvas
+      ref={canvasRef}
       className="pointer-events-none fixed inset-0 z-[9999]"
-      style={{
-        background: `radial-gradient(400px circle at ${pos.x}px ${pos.y}px, rgba(139, 92, 246, 0.12), transparent 60%)`,
-      }}
     />
   );
 };
