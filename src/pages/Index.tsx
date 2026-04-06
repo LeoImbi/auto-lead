@@ -108,8 +108,8 @@ const Hero = () => (
 );
 
 const steps = [
-  { num: "1", title: "Conecte WhatsApp, Instagram e seu site", desc: "Integre todos os seus canais de atendimento em um só lugar." },
-  { num: "2", title: "Configure a IA em minutos, sem código", desc: "Setup simples e intuitivo. Nenhum programador necessário." },
+  { num: "1", title: "Você nos conta como funciona seu negócio", desc: "Nos diga como você atende, o que vende e como quer ser representado pela IA." },
+  { num: "2", title: "A gente configura tudo para você", desc: "Nossa equipe conecta seus canais e personaliza a IA com base no seu negócio." },
   { num: "3", title: "Receba leads qualificados 24 horas por dia", desc: "A IA trabalha enquanto você descansa. Leads quentes na sua mão." },
 ];
 
@@ -157,10 +157,10 @@ const Diferenciais = () => (
 );
 
 const metricas = [
-  { valor: "+10.000", label: "atendimentos" },
+  { valor: "100%", label: "configurado por nós" },
   { valor: "70%", label: "menos custo" },
   { valor: "24/7", label: "ativo" },
-  { valor: "5 min", label: "para configurar" },
+  { valor: "< 1 dia", label: "para configurar" },
 ];
 
 const Numeros = () => (
